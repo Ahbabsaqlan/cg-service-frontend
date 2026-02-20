@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import NeonButton from "./NeonButton";
+import MagneticButton from "./MagneticButton";
 
 export default function Navbar() {
   return (
@@ -21,7 +22,9 @@ export default function Navbar() {
         <Link href="#workflow" className="hover:text-white transition-colors">Workflow</Link>
       </div>
 
-      <NeonButton text="Portal Login" />
+      <MagneticButton>
+        <NeonButton text="Portal Login" />
+      </MagneticButton>
     </motion.nav>
   );
 }
