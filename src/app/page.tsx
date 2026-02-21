@@ -5,6 +5,7 @@ import WorkflowTimeline from "@/components/sections/WorkflowTimeline";
 import WhyChooseUs from "@/components/sections/WhyChooseUs";
 import Contact from "@/components/sections/Contact";
 import Footer from "@/components/ui/Footer";
+import StatsSection from "@/components/sections/StatsSection";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <Services />
       <WorkflowTimeline />
       <WhyChooseUs />
+      <StatsSection />
       <Contact />
       <Footer />
     </main>
