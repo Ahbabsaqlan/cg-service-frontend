@@ -1,18 +1,30 @@
 "use client";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
-import { Home, CheckCircle2, Activity, ScanLine, Target } from "lucide-react";
+import { 
+  motion, 
+  useScroll, 
+  useTransform, 
+  useSpring, 
+  useMotionTemplate,
+  useMotionValueEvent, 
+  AnimatePresence 
+} from "framer-motion";
+import { useRef, useState } from "react";
+import { 
+  Home, CheckCircle2, Activity, ScanLine, 
+  Target, Globe, Zap, ShieldCheck 
+} from "lucide-react";
 
 const paragraph = "Chowdhury Global Service LLC operates at the intersection of on-the-ground precision and digital efficiency. We manage assets with unmatched speed, ensuring every property is preserved with the highest standards of quality and transparency.";
 
 export default function About() {
-  const textContainerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef(null);
   const words = paragraph.split(" ");
-  
-  // Track scroll strictly for the text container
-  // Start Center to End Center means words ONLY light up in the exact middle of the screen
+  const [activeCard, setActiveCard] = useState(0);
+
+  // 1. Target the CONTAINER for scroll progress
   const { scrollYProgress } = useScroll({
-    target: textContainerRef,
+    target: containerRef,
+    // Start animation when top hits center, end when bottom hits center
     offset: ["start center", "end center"], 
   });
 
@@ -22,20 +34,30 @@ export default function About() {
     restDelta: 0.001
   });
 
-  // 3D Tilt for the card (but NOT moving Y, CSS handles Y now)
-  const cardRotate = useTransform(smoothProgress, [0, 1], [15, -15]);
+  // 2. Change card state based on exact scroll percentage (divided into 4 equal quarters)
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    if (latest < 0.25) setActiveCard(0);
+    else if (latest < 0.50) setActiveCard(1);
+    else if (latest < 0.75) setActiveCard(2);
+    else setActiveCard(3);
+  });
+
+  // 3. Card 3D tilt
+  const cardRotate = useTransform(smoothProgress, [0, 1], [8, -8]);
 
   return (
-    // CRITICAL FIX: Removed `overflow-hidden`. Sticky will not work if parent has overflow hidden!
-    <section id="about" className="relative bg-black border-t border-white/5 py-20 md:py-32">
+    <section 
+      ref={containerRef} 
+      id="about" 
+      className="relative bg-black w-full border-t border-white/5"
+    >
       <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
       
-      {/* NATIVE GRID LAYOUT */}
-      <div className="max-w-7xl mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
+      <div className="max-w-7xl mx-auto px-6 relative z-10 flex flex-col lg:flex-row gap-16 lg:gap-24">
         
-        {/* LEFT COLUMN: THE SCROLLING TEXT (This dictates the height of the section) */}
-        <div ref={textContainerRef} className="flex flex-col relative z-10 pb-20 md:pb-40">
-          
+        {/* LEFT: THE TEXT ENGINE */}
+        {/* py-[20vh] frames the text beautifully without leaving dead empty space at the end */}
+        <div className="w-full lg:w-1/2 flex flex-col relative z-10 py-[20vh] lg:py-[25vh]">
           <motion.div 
              initial={{ opacity: 0 }}
              whileInView={{ opacity: 1 }}
@@ -46,8 +68,7 @@ export default function About() {
              <span className="text-cyan-500 font-mono text-[10px] tracking-[0.4em] uppercase">Core Directive</span>
           </motion.div>
 
-          {/* THE WORD REVEAL */}
-          <div className="flex flex-wrap text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-bold tracking-tighter leading-[1.05] mb-20">
+          <div className="flex flex-wrap text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-bold tracking-tighter leading-[1.0] mb-20">
             {words.map((word, i) => (
               <Word key={i} index={i} total={words.length} progress={smoothProgress}>
                 {word}
@@ -55,64 +76,55 @@ export default function About() {
             ))}
           </div>
 
-          {/* CLEAR STATUS TABS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-10 border-t border-white/10">
-            <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 backdrop-blur-md">
-                <Target className="w-6 h-6 text-cyan-500 mb-4" />
-                <span className="block text-white font-black text-sm uppercase tracking-widest mb-2">Precision</span>
-                <span className="text-gray-400 text-xs leading-relaxed block">99.9% AI Audit Accuracy across all line items.</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-10 border-t border-white/10 mt-auto">
+            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-xl flex items-center gap-4">
+                <Target className="w-6 h-6 text-cyan-500 shrink-0" />
+                <div>
+                    <span className="block text-white font-black text-xs uppercase tracking-widest">Precision</span>
+                    <span className="text-gray-500 text-[10px]">99.9% Audit Accuracy</span>
+                </div>
             </div>
-            <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 backdrop-blur-md">
-                <Activity className="w-6 h-6 text-cyan-400 mb-4" />
-                <span className="block text-white font-black text-sm uppercase tracking-widest mb-2">Velocity</span>
-                <span className="text-gray-400 text-xs leading-relaxed block">Real-time cloud sync reduces turnaround by 40%.</span>
+            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-xl flex items-center gap-4">
+                <Activity className="w-6 h-6 text-cyan-400 shrink-0" />
+                <div>
+                    <span className="block text-white font-black text-xs uppercase tracking-widest">Velocity</span>
+                    <span className="text-gray-500 text-[10px]">Real-time Sync Active</span>
+                </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: THE STICKY WRAPPER */}
-        {/* The column stretches to match the text height. The inner div sticks to the screen. */}
-        <div className="relative h-full w-full hidden lg:block">
+        {/* RIGHT: THE GLIDING CARD */}
+        <div className="hidden lg:block w-full lg:w-1/2 relative">
           
-          {/* THE STICKY CARD: This will physically "run down" the column as you scroll */}
-          <div className="sticky top-[20vh] w-full flex justify-end">
-            
+          {/* FIX: 'top-0 h-screen flex items-center' mathematically locks it perfectly in the middle */}
+          <div className="sticky top-0 h-screen flex items-center justify-end w-full">
             <motion.div 
-              style={{ 
-                rotateX: cardRotate, 
-                transformStyle: "preserve-3d" 
-              }}
-              className="w-full max-w-[420px] aspect-[4/5] rounded-[3rem] border border-white/10 bg-gradient-to-br from-white/10 to-black backdrop-blur-3xl p-10 flex flex-col relative shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
+              style={{ rotateX: cardRotate, transformStyle: "preserve-3d" }}
+              className="w-full max-w-[420px] aspect-[4/5] rounded-[3rem] border border-white/10 bg-gradient-to-br from-white/10 via-black to-black backdrop-blur-3xl p-10 flex flex-col relative shadow-[0_50px_100px_rgba(0,0,0,0.9)] overflow-hidden"
             >
-              <div className="flex justify-between items-start mb-10 relative z-10" style={{ transform: "translateZ(30px)" }}>
-                <div className="space-y-1">
-                   <div className="text-7xl font-black text-white tracking-tighter">100<span className="text-2xl text-cyan-500">%</span></div>
-                   <div className="px-2 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded text-[9px] font-mono text-cyan-400 uppercase tracking-widest inline-block">Audit Success</div>
-                </div>
-                <div className="w-12 h-12 rounded-xl border border-white/10 flex items-center justify-center bg-black/50 shadow-xl">
-                  <ScanLine className="w-6 h-6 text-cyan-500 animate-pulse" />
-                </div>
-              </div>
-
-              <div className="flex-1 relative flex items-center justify-center scale-125" style={{ transform: "translateZ(50px)" }}>
-                 <HolographicWorker />
-              </div>
-
-              <div className="pt-8 border-t border-white/5 flex justify-between items-end relative z-10" style={{ transform: "translateZ(30px)" }}>
-                  <div className="flex flex-col">
-                      <span className="text-white font-black text-xl tracking-tighter uppercase leading-none">Digital Link</span>
-                      <span className="text-gray-600 text-[9px] font-mono tracking-widest mt-2 uppercase">ERP_PROTOCOL_V4</span>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeCard}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="flex flex-col h-full w-full relative z-10"
+                >
+                  <CardHeader data={CARD_STATES[activeCard]} />
+                  
+                  <div className="flex-1 relative flex items-center justify-center scale-125">
+                     {(() => {
+                        const VisualComponent = CARD_STATES[activeCard].Visual;
+                        return <VisualComponent progress={smoothProgress} />;
+                     })()}
                   </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30">
-                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping" />
-                      <span className="text-cyan-400 font-mono text-[9px] uppercase font-bold tracking-tighter">Syncing</span>
-                  </div>
-              </div>
 
-              {/* Dynamic Glare */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 via-transparent to-white/5 pointer-events-none rounded-[3rem]" />
+                  <CardFooter data={CARD_STATES[activeCard]} />
+                </motion.div>
+              </AnimatePresence>
             </motion.div>
-
           </div>
         </div>
 
@@ -121,51 +133,121 @@ export default function About() {
   );
 }
 
-// 🎯 FOCUSED WORD HIGHLIGHT COMPONENT
+/* ================= 4 STATE CONFIGURATIONS ================= */
+const CARD_STATES = [
+  { title: "100", symbol: "%", sub: "Audit Success", icon: ScanLine, iconColor: "text-cyan-500", tagBg: "bg-cyan-500/10", tagBorder: "border-cyan-500/20", tagText: "text-cyan-400", footerTitle: "Digital Link", footerSub: "ERP_PROTOCOL_V4", status: "Syncing", statusDot: "bg-cyan-500", Visual: HolographicWorker },
+  { title: "360", symbol: "°", sub: "Global Mapping", icon: Globe, iconColor: "text-blue-500", tagBg: "bg-blue-500/10", tagBorder: "border-blue-500/20", tagText: "text-blue-400", footerTitle: "Geo-Spatial", footerSub: "LAT_LONG_TRACK", status: "Scanning", statusDot: "bg-blue-500", Visual: RadarScanner },
+  { title: "<10", symbol: "ms", sub: "Data Velocity", icon: Zap, iconColor: "text-amber-500", tagBg: "bg-amber-500/10", tagBorder: "border-amber-500/20", tagText: "text-amber-400", footerTitle: "Real-Time", footerSub: "SOCKET_STREAM", status: "Active", statusDot: "bg-amber-500", Visual: DataWave },
+  { title: "99.9", symbol: "%", sub: "Quality Ensured", icon: ShieldCheck, iconColor: "text-emerald-500", tagBg: "bg-emerald-500/10", tagBorder: "border-emerald-500/20", tagText: "text-emerald-400", footerTitle: "Verification", footerSub: "PRESERVATION", status: "Secured", statusDot: "bg-emerald-500", Visual: ShieldLock }
+];
+
+/* ================= COMPONENT HELPERS ================= */
+function CardHeader({ data }: { data: any }) {
+  const Icon = data.icon;
+  return (
+    <div className="flex justify-between items-start mb-10">
+      <div className="space-y-1">
+          <div className="text-7xl font-black text-white tracking-tighter">{data.title}<span className={`text-2xl ${data.iconColor}`}>{data.symbol}</span></div>
+          <div className={`px-2 py-0.5 ${data.tagBg} ${data.tagBorder} border rounded text-[9px] font-mono ${data.tagText} uppercase tracking-widest inline-block`}>{data.sub}</div>
+      </div>
+      <div className="w-12 h-12 rounded-xl border border-white/10 flex items-center justify-center bg-black/50 shadow-xl"><Icon className={`w-6 h-6 ${data.iconColor} animate-pulse`} /></div>
+    </div>
+  );
+}
+
+function CardFooter({ data }: { data: any }) {
+  return (
+    <div className="pt-8 border-t border-white/5 flex justify-between items-end">
+        <div className="flex flex-col">
+            <span className="text-white font-black text-xl tracking-tighter uppercase leading-none">{data.footerTitle}</span>
+            <span className="text-gray-600 text-[9px] font-mono tracking-widest uppercase mt-2">{data.footerSub}</span>
+        </div>
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${data.tagBg} border ${data.tagBorder}`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${data.statusDot} animate-ping`} />
+            <span className={`${data.tagText} font-mono text-[9px] uppercase font-bold tracking-tighter`}>{data.status}</span>
+        </div>
+    </div>
+  );
+}
+
 function Word({ children, index, total, progress }: any) {
   const centerPoint = index / total;
-  
-  // Words are Dim. They turn Pure White exactly in the middle of the screen.
-  const opacity = useTransform(
-    progress, 
-    [centerPoint - 0.15, centerPoint, centerPoint + 0.15], 
-    [0.15, 1, 0.15]
-  );
-  
-  const color = useTransform(
-    progress, 
-    [centerPoint - 0.15, centerPoint, centerPoint + 0.15], 
-    ["#374151", "#ffffff", "#374151"]
-  );
-
+  const opacity = useTransform(progress, [centerPoint - 0.2, centerPoint, centerPoint + 0.2], [0.15, 1, 0.15]);
+  const color = useTransform(progress, [centerPoint - 0.2, centerPoint, centerPoint + 0.2], ["#374151", "#ffffff", "#374151"]);
+  const glow = useTransform(progress, [centerPoint - 0.1, centerPoint, centerPoint + 0.1], ["0px 0px 0px rgba(6,182,212,0)", "0px 0px 20px rgba(6,182,212,0.5)", "0px 0px 0px rgba(6,182,212,0)"]);
   return (
     <span className="relative mr-4 mt-2 inline-block">
-      <motion.span style={{ opacity, color }} className="inline-block transition-colors duration-150">
-        {children}
-      </motion.span>
+      <motion.span style={{ opacity, color, textShadow: glow }} className="inline-block transition-all duration-150">{children}</motion.span>
     </span>
   );
 }
 
-// THE HOUSE ANIMATION
-function HolographicWorker() {
-    const [scanProgress, setScanProgress] = useState(0);
-    useEffect(() => {
-      const interval = setInterval(() => setScanProgress(p => p >= 100 ? 0 : p + 1), 30);
-      return () => clearInterval(interval);
-    }, []);
-    
+/* ================= 4 SCROLL-GLIDING ANIMATIONS ================= */
+
+function HolographicWorker({ progress }: { progress: any }) {
+    const localProg = useTransform(progress, [0, 0.25], [0, 1]); // Maps first 25%
+    const rawPercent = useTransform(localProg, [0, 1], [0, 100]);
+    const topVal = useMotionTemplate`${rawPercent}%`;
+    const clipPathVal = useTransform(rawPercent, (v) => `inset(0 0 ${100 - v}% 0)`);
+
     return (
       <div className="relative w-48 h-48 flex items-center justify-center">
         <Home className="absolute w-32 h-32 text-white/5 stroke-[1px]" />
-        <div 
-          className="absolute inset-0 flex items-center justify-center text-cyan-400"
-          style={{ clipPath: `inset(0 0 ${100 - scanProgress}% 0)`, transition: "clip-path 0.1s linear" }}
-        >
+        <motion.div className="absolute inset-0 flex items-center justify-center text-cyan-400" style={{ clipPath: clipPathVal }}>
            <Home className="w-32 h-32 stroke-[2.5px] drop-shadow-[0_0_20px_rgba(6,182,212,1)]" />
-           <CheckCircle2 className="absolute w-10 h-10 text-cyan-400 bg-black rounded-full" />
-        </div>
-        <div className="absolute left-[-15%] w-[130%] h-[1px] bg-cyan-400 shadow-[0_0_30px_#06b6d4]" style={{ top: `${scanProgress}%` }} />
+           <CheckCircle2 className="absolute w-10 h-10 text-cyan-400 bg-black rounded-full shadow-[0_0_10px_cyan]" />
+        </motion.div>
+        <motion.div className="absolute left-[-15%] w-[130%] h-[2px] bg-cyan-400 shadow-[0_0_20px_#06b6d4] z-10" style={{ top: topVal }}>
+             <div className="absolute right-0 -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-[0_0_10px_white]" />
+        </motion.div>
       </div>
+    );
+}
+
+function RadarScanner({ progress }: { progress: any }) {
+    const localProg = useTransform(progress, [0.25, 0.5], [0, 1]); // Maps second 25%
+    const rawPercent = useTransform(localProg, [0, 1], [0, 100]);
+    const scale = useTransform(localProg, [0, 1], [0.5, 2]);
+    const opacity = useTransform(localProg, [0, 0.8, 1], [1, 1, 0]);
+    const clipPathVal = useTransform(rawPercent, (v) => `circle(${v}% at 50% 50%)`);
+
+    return (
+      <div className="relative w-48 h-48 flex items-center justify-center">
+         <Globe className="absolute w-32 h-32 text-white/5 stroke-[1px]" />
+         <motion.div className="absolute inset-0 flex items-center justify-center text-blue-500" style={{ clipPath: clipPathVal }}>
+            <Globe className="w-32 h-32 stroke-[2.5px] drop-shadow-[0_0_20px_rgba(59,130,246,1)]" />
+         </motion.div>
+         <motion.div className="absolute inset-0 border-[2px] border-blue-500 rounded-full" style={{ scale, opacity }} />
+      </div>
+    );
+}
+
+function DataWave({ progress }: { progress: any }) {
+    const localProg = useTransform(progress, [0.5, 0.75], [0, 1]); // Maps third 25%
+    const h1 = useMotionTemplate`${useTransform(localProg, [0, 1], [20, 100])}%`;
+    const h2 = useMotionTemplate`${useTransform(localProg, [0, 1], [40, 80])}%`;
+    const h3 = useMotionTemplate`${useTransform(localProg, [0, 1], [10, 90])}%`;
+
+    return (
+       <div className="relative w-48 h-48 flex items-end justify-center gap-4 pb-8">
+          <motion.div className="w-6 bg-amber-500 rounded-t-md shadow-[0_0_15px_rgba(245,158,11,0.5)]" style={{ height: h1 }} />
+          <motion.div className="w-6 bg-amber-400 rounded-t-md shadow-[0_0_15px_rgba(251,191,36,0.5)]" style={{ height: h2 }} />
+          <motion.div className="w-6 bg-amber-300 rounded-t-md shadow-[0_0_15px_rgba(252,211,77,0.5)]" style={{ height: h3 }} />
+       </div>
+    );
+}
+
+function ShieldLock({ progress }: { progress: any }) {
+    const localProg = useTransform(progress, [0.75, 1], [0, 1]); // Maps last 25%
+    const rawPercent = useTransform(localProg, [0, 1], [0, 100]);
+    const clipPathVal = useTransform(rawPercent, (v) => `inset(${100 - v}% 0 0 0)`);
+
+    return (
+       <div className="relative w-48 h-48 flex items-center justify-center">
+          <ShieldCheck className="absolute w-32 h-32 text-white/5 stroke-[1px]" />
+          <motion.div className="absolute inset-0 flex items-center justify-center text-emerald-400" style={{ clipPath: clipPathVal }}>
+             <ShieldCheck className="w-32 h-32 stroke-[2.5px] drop-shadow-[0_0_20px_rgba(16,185,129,1)]" />
+          </motion.div>
+       </div>
     );
 }

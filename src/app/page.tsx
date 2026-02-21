@@ -8,7 +8,7 @@ import Footer from "@/components/ui/Footer";
 
 export default function Home() {
   return (
-    <main className="w-full min-h-screen bg-black overflow-hidden">
+    <main className="w-full min-h-screen bg-black overflow-clip">
       <Hero />
       <About />
       <Services />

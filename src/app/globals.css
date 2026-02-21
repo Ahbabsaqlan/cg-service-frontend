@@ -8,14 +8,16 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  overflow-x: hidden;
+  /* FIX: Changed from hidden to clip to allow sticky positioning */
+  overflow-x: clip; 
   width: 100vw;
   -webkit-font-smoothing: antialiased;
 }
 
 /* Fix for horizontal scroll on mobile */
 main {
-  overflow-x: hidden;
+  /* FIX: Changed from hidden to clip to allow sticky positioning */
+  overflow-x: clip; 
   width: 100%;
 }
 
